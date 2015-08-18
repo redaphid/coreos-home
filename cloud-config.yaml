@@ -1,0 +1,40 @@
+#cloud-config
+hostname: jad
+users:
+  - name: redaphid
+    passwd: $6$rounds=4096$Bvvydyw1$7isnGk5Z81IvcKxzgizTXqd8jPwc.1AkdL3Xohbpc3XGdN7PQJ5cum00HQ.DFbnb7CDqzEJZnxnu4JEVmXToL/
+    groups:
+      - sudo
+      - docker
+
+ssh_authorized_keys:
+- ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCsf8yHIi2iEWKZAb4DbKUX5yEe8Xr1FU1h7JSGb4Oj5OuYIoW2frOO6MVsG4m7/vXHw606pDzrNhzh7CW8/VWx2rWKeJ+y0l+qT/UY0lemTp6jKK+MUgGOKvqD5xMV3BkV5abDJSlkdgdIrBs5bDMhInDT3q8SU94J0nrk8clVsDb1bhOU8B+wIp/XNw2PEhPzJOQdSWsuAmAbwra+r4Bhooa4prg81HK3kw3n7DahsVkJt5LUOYMoSWYwThVnxRXRG3dNYU1dfwMKVC8SiDmc6f454Beqg/KYevSDmo0y7w4NxJxlujCGCxByoeotRz+BzWqB1sSgiozkxj+y8Y81 redaphid@quiver
+
+write_files:
+  - path: /etc/resolv.conf
+    permissions: 0644
+    owner: root
+    content: |
+      nameserver 8.8.8.8
+
+fleet:
+  public-ip: $public_ipv4   # used for fleetctl ssh command
+
+units:
+  - name: etcd.service
+    command: start
+  - name: fleet.service
+    command: start
+
+coreos:
+  etcd2:
+    discovery: discovery: https://discovery.etcd.io/e1e341db7d6bf681a2183b9e0c647c56
+    advertise-client-urls: http://$private_ipv4:2379,http://$private_ipv4:4001
+    initial-advertise-peer-urls: http://$private_ipv4:2380
+    listen-client-urls: http://0.0.0.0:2379,http://0.0.0.0:4001
+    listen-peer-urls: http://$private_ipv4:2380
+  units:
+    - name: etcd2.service
+      command: start
+    - name: fleet.service
+      command: start
